@@ -16,4 +16,6 @@ app.include_router(chat_router)
 
 @app.get("/")
 def home():
-    return {"message": "Next-level backend running 🚀"}
+    return {
+        "message": "Next-level backend running 🚀"
+    }
