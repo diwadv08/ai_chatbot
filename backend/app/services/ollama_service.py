@@ -1,39 +1,31 @@
-import requests
-from app.utils.memory import add_message, get_history
+import os
+from dotenv import load_dotenv
+from openai import OpenAI
 
-OLLAMA_URL = "https://api-inference.huggingface.co/models/google/flan-t5-base"
+load_dotenv()
+
+client = OpenAI(
+    api_key=os.getenv("GROQ_API_KEY"),
+    base_url="https://api.groq.com/openai/v1"
+)
 
 def get_ai_response(session_id, user_message):
     try:
-        # add user message
-        add_message(session_id, "User", user_message)
-
-        history = get_history(session_id)
-
-        # better prompt
-        prompt = f"""
-You are a helpful AI assistant.
-Keep answers short and clear.
-
-{history}
-Assistant:
-"""
-
-        response = requests.post(
-            OLLAMA_URL,
-            json={
-                "model": "llama3",
-                "prompt": prompt,
-                "stream": False
-            },
-            timeout=60
+        completion = client.chat.completions.create(
+            model="llama3-8b-8192",
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are a helpful AI assistant."
+                },
+                {
+                    "role": "user",
+                    "content": user_message
+                }
+            ]
         )
 
-        result = response.json().get("response", "No response")
-
-        add_message(session_id, "Assistant", result)
-
-        return result
+        return completion.choices[0].message.content
 
     except Exception as e:
         return f"Error: {str(e)}"
